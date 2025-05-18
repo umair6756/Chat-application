@@ -1,7 +1,8 @@
 export default function InputField({label, icon, placeholder, type}) {
     return (
        <>
-       <div className=" mx-auto bg-white px-9 py-3 h-auto w-[500px]">
+       
+       <div className=" py-3 ">
   <label
     htmlFor="website-admin"
     className="block mb-2 text-md font-bold text-gray-700 "
@@ -9,7 +10,7 @@ export default function InputField({label, icon, placeholder, type}) {
     {label}
   </label>
   <div className="flex">
-    <span className="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-e-0 border-gray-300 ">
+    <span className="inline-flex items-center px-3 text-sm text-gray-700 bg-gray-200 border border-e-0 border-gray-300 ">
       <div
         className=""
     
@@ -25,7 +26,6 @@ export default function InputField({label, icon, placeholder, type}) {
     />
   </div>
 </div>
-
        </>
     )
 
