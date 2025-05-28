@@ -15,16 +15,65 @@ import MessageBox from './MessageBox';
 const EmojiPicker = dynamic(() => import('emoji-picker-react'), { ssr: false });
 
 export default function ChatBox() {
+  // Messages array: each message has id, user, time, text, images, and whether it is own message
+  const [messages, setMessages] = useState([
+    {
+      id: 1,
+      user: { name: 'Bonnie Green', image: '/images/person.jpg' },
+      time: '11:46',
+      message: 'This is the new office <3',
+      images: ['/images/person.jpg', '/images/person.jpg', '/images/person.jpg', '/images/person.jpg'],
+      isOwn: false,
+    },
+    {
+      id: 2,
+      user: { name: 'Bonnie Green', image: '/images/person.jpg' },
+      time: '11:47',
+      message: 'This is the new office <3',
+      images: [],
+      isOwn: false,
+    },
+    {
+      id: 3,
+      user: { name: 'You', image: '/avatar1.jpg' },
+      time: 'Now',
+      message: 'Hello, this is my message',
+      images: [],
+      isOwn: true,
+    },
+  ]);
+
   const [showSearch, setShowSearch] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [message, setMessage] = useState('');
+  const [imageURL, setImageURL] = useState(''); // for adding image URLs
 
+  // Add emoji to message input
   const onEmojiClick = (emojiData) => {
     setMessage((prev) => prev + emojiData.emoji);
   };
 
+  // Handle send button
+  const handleSend = () => {
+    if (!message.trim() && !imageURL.trim()) return;
+
+    const newMessage = {
+      id: Date.now(),
+      user: { name: 'You', image: '/avatar1.jpg' },
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      message: message.trim(),
+      images: imageURL.trim() ? [imageURL.trim()] : [],
+      isOwn: true,
+    };
+
+    setMessages((prev) => [...prev, newMessage]);
+    setMessage('');
+    setImageURL('');
+    setShowEmojiPicker(false);
+  };
+
   return (
-    <div className="w-[100%] h-screen flex flex-col bg-gradient-to-br from-white via-[#f3f4f6] to-[#e5e7eb] text-black">
+    <div className="w-full h-screen flex flex-col bg-gradient-to-br from-white via-[#f3f4f6] to-[#e5e7eb] text-black">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-3 border-b shadow-sm bg-white">
         <div className="flex items-center gap-3">
@@ -59,45 +108,33 @@ export default function ChatBox() {
 
       {/* Chat Body */}
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6 bg-[#f9fafb]">
-        {/* Image bubble */}
-        <div className="flex flex-col items-start gap-1">
-           <MessageBox/>
-        </div>
-
-        {/* Typing */}
-        <div className="flex flex-col items-start">
-          <div className="bg-[#7A65FC] text-white px-4 py-2 rounded-xl max-w-fit shadow animate-pulse">
-            typing <span className="inline-block animate-bounce">•••</span>
-          </div>
-        </div>
-
-        {/* File message */}
-        <div className="flex flex-col items-end">
-          <div className="flex items-center gap-3 p-4 border rounded-xl shadow bg-white">
-            <div className="bg-indigo-100 p-2 rounded-lg">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                fill="currentColor"
-                viewBox="0 0 16 16"
-              >
-                <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h6.5L14 4.5z" />
-              </svg>
+        {messages.map(({ id, user, time, message, images, isOwn }) => (
+          <div
+            key={id}
+            className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
+          >
+            <div
+              className={`max-w-[326px] ${
+                isOwn
+                  ? 'bg-white rounded-s-xl rounded-se-xl p-4 shadow'
+                  : ''
+              }`}
+            >
+              <MessageBox
+                user={user}
+                time={time}
+                message={message}
+                images={images}
+                isOwn={isOwn}
+              />
             </div>
-            <div>
-              <div className="font-semibold text-sm">admin_v1.0.zip</div>
-              <div className="text-xs text-gray-500">12.5 MB</div>
-            </div>
-            <button className="text-blue-600 text-sm hover:underline">⬇</button>
           </div>
-          <span className="text-xs text-gray-400 mt-1">01:30</span>
-        </div>
+        ))}
       </div>
 
       {/* Input Bar */}
       <div className="border-t px-5 py-4 bg-white shadow-inner relative">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 mb-2">
           <Smile
             className="w-6 h-6 text-gray-600 hover:text-indigo-600 cursor-pointer"
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
@@ -105,12 +142,28 @@ export default function ChatBox() {
           <Paperclip className="w-6 h-6 text-gray-600 hover:text-indigo-600 cursor-pointer" />
           <input
             type="text"
+            placeholder="Add image URL (optional)"
+            className="flex-1 border border-gray-300 px-4 py-2 rounded-full text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 transition-all duration-200"
+            value={imageURL}
+            onChange={(e) => setImageURL(e.target.value)}
+          />
+        </div>
+
+        <div className="flex items-center gap-3">
+          <input
+            type="text"
             placeholder="Type a message"
             className="flex-1 border border-gray-300 px-4 py-2 rounded-full text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 transition-all duration-200"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleSend();
+            }}
           />
-          <button className="bg-[#7A65FC] text-white p-2 rounded-full hover:bg-[#6750f5] transition-colors">
+          <button
+            onClick={handleSend}
+            className="bg-[#7A65FC] text-white p-2 rounded-full hover:bg-[#6750f5] transition-colors"
+          >
             <Send className="w-5 h-5" />
           </button>
         </div>
